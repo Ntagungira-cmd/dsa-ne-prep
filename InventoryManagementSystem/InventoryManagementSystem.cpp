@@ -1,4 +1,5 @@
 // Inventory Management System
+#include "CustomExceptions.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -86,6 +87,8 @@ void welcome_screen()
   cout << endl;
 }
 
+
+// Add item to file
 void addItem(const string filename, const Item &itemToAdd)
 {
   ifstream file(filename.c_str());
@@ -124,14 +127,14 @@ void addItem(const string filename, const Item &itemToAdd)
     outfile.open(filename.c_str(), ios::app);
     if (!outfile.is_open())
     {
-      throw runtime_error("Failed to open file: " + filename);
+      throw FileOpenException("Failed to open file: " + filename);
     }
 
     outfile << itemToAdd.item_id << "," << toLowerCase(itemToAdd.item_name) << "," << toLowerCase(itemToAdd.item_quantity) << "," << itemToAdd.item_registration_date <<endl;
 
     if (outfile.fail())
     {
-      throw runtime_error("Failed to write to file: " + filename);
+      throw FileWriteException("Failed to write to file: " + filename);
     }
 
     outfile.close();
@@ -142,6 +145,8 @@ void addItem(const string filename, const Item &itemToAdd)
     cout << "Error: " << e.what() << endl;
   }
 }
+
+
 
 // sort compare item names during sorting
 bool compareName(const Item &item1, const Item &item2)
@@ -155,7 +160,7 @@ void listItems(const string &filename)
   ifstream file(filename.c_str());
   if (!file)
   {
-    cerr << "Error opening file: " << filename << endl;
+    throw FileOpenException("Error opening file: " + filename);
     return;
   }
 
