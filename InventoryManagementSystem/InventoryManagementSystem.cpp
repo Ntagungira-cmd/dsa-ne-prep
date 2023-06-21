@@ -158,6 +158,7 @@ bool compareName(const Item &item1, const Item &item2)
 void listItems(const string &filename)
 {
   ifstream file(filename.c_str());
+  // ifstream file("");
   if (!file)
   {
     throw FileOpenException("Error opening file: " + filename);

@@ -1,39 +1,39 @@
 #ifndef CUSTOMEXCEPTIONS_H
 #define CUSTOMEXCEPTIONS_H
 
-#include <stdexcept>
+#include <exception>
 #include <string>
 
-
-//file Open Exception
 class FileOpenException : public std::exception
 {
 public:
-  FileOpenException(const std::string &message) : errorMessage(message) {}
+  FileOpenException(const std::string &message) throw() : errorMessage(message) {}
 
-  virtual const char *what() const noexcept
+  virtual const char *what() const throw()
   {
     return errorMessage.c_str();
   }
+
+  virtual ~FileOpenException() throw() {}
 
 private:
   std::string errorMessage;
 };
 
-
-//file write exception
 class FileWriteException : public std::exception
 {
 public:
-  FileWriteException(const std::string &message) : errorMessage(message) {}
+  FileWriteException(const std::string &message) throw() : errorMessage(message) {}
 
-  const char *what() const noexcept override
+  virtual const char *what() const throw()
   {
     return errorMessage.c_str();
   }
+
+  virtual ~FileWriteException() throw() {}
 
 private:
   std::string errorMessage;
 };
 
-#endif
+#endif // CUSTOMEXCEPTIONS_H
