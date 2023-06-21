@@ -6,72 +6,57 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <cctype>
 
 using namespace std;
 
 struct Item
 {
-  int item_id;
+  string item_id;
   string item_name;
-  int item_quantity;
+  string item_quantity;
   string item_registration_date;
-
-  bool isEmpty() const
-  {
-    // Check if any of the essential fields is empty or uninitialized
-    return (item_id == 0) || item_name.empty() || (item_quantity == 0) || item_registration_date.empty();
-  }
 };
 
-// custom stoi function
-int custom_stoi(const std::string &str)
+// check if string is numeric
+bool isNumeric(const string &str)
 {
-  int result = 0;
-  int sign = 1;
-  size_t i = 0;
-
-  if (str[0] == '-')
+  for (size_t i = 0; i < str.length(); i++)
   {
-    sign = -1;
-    i = 1;
+    if (!isdigit(str[i]))
+      return false;
   }
-
-  for (; i < str.length(); i++)
-  {
-    result = result * 10 + (str[i] - '0');
-  }
-
-  return sign * result;
+  return true;
 }
 
-// validate the user input to match item structure
 bool validateItem(const Item &itemToValidate)
 {
-  // Check if item_id is positive
-  if (itemToValidate.item_id < 0)
+  // Check if item_id is positive and numeric
+  if (itemToValidate.item_id.empty() || !isNumeric(itemToValidate.item_id))
   {
-    std::cout << "Invalid item_id" << std::endl;
+    cout << "Invalid item_id" << endl;
     return false;
   }
 
-  // Check if item_name is not empty
-  if (itemToValidate.item_name.empty())
+  // Check if item_name is not empty and within a valid length range
+  if (itemToValidate.item_name.empty() || itemToValidate.item_name.length() > 20)
   {
-    std::cout << "Invalid item_name" << std::endl;
+    cout << "Invalid item_name" << endl;
     return false;
   }
 
-  // Check if item_quantity is non-negative
-  if (itemToValidate.item_quantity < 0)
+  // Check if item_quantity is non-negative and numeric
+  if (itemToValidate.item_quantity.empty() || !isNumeric(itemToValidate.item_quantity))
   {
-    std::cout << "Invalid item_quantity" << std::endl;
+    cout << "Invalid item_quantity" << endl;
     return false;
   }
 
-  // Check if item_registration_date is not empty
-  if (itemToValidate.item_registration_date.empty())
+  // Check if item_registration_date is in a valid format (assuming YYYY-MM-DD)
+  if (itemToValidate.item_registration_date.empty() || itemToValidate.item_registration_date.length() != 10 ||
+      itemToValidate.item_registration_date[4] != '-' || itemToValidate.item_registration_date[7] != '-')
   {
-    std::cout << "Invalid item_registration_date" << std::endl;
+    cout << "Invalid item_registration_date" << endl;
     return false;
   }
 
@@ -96,10 +81,9 @@ void welcome_screen()
   cout << "              =================================================       " << endl;
   cout << "              *   Welcome To Inventory Management System!   *" << endl;
   cout << "              * ********************************************** *" << endl;
-  cout << "                                                                       " << endl;
-  cout << "               * It is developed by RCA Ntagungira Ali Rashid *" << endl;
-  cout << "                     * DSA Evaluation of end of year 3 *           " << endl;
-  cout << "                                                                        " << endl;
+  cout << endl;
+  cout << "     *      Enter a command of your choice or help for assistance     *" << endl;
+  cout << endl;
 }
 
 void addItem(const string filename, const Item &itemToAdd)
@@ -108,22 +92,23 @@ void addItem(const string filename, const Item &itemToAdd)
   if (file)
   {
     string line;
-    while (std::getline(file, line))
+    while (getline(file, line))
     {
       stringstream ss(line);
       string idStr;
       string nameStr;
       getline(ss, idStr, ',');
+      getline(ss, nameStr, ',');
 
       // Check if the item ID already exists in the file
-      if (custom_stoi(idStr) == itemToAdd.item_id)
+      if (idStr == itemToAdd.item_id)
       {
-        cout << "Item with the same ID already exists. Cannot add the item.";
+        cout << "Item with the same ID already exists. Cannot add the item."<< endl;
         return;
       }
-      if (nameStr == itemToAdd.item_name)
+      if (nameStr == toLowerCase(itemToAdd.item_name))
       {
-        cout << "Item with the same name already exists. Cannot add the item.";
+        cout << "Item with the same name already exists. Cannot add the item."<< endl;
         return;
       }
       else
@@ -139,78 +124,67 @@ void addItem(const string filename, const Item &itemToAdd)
     outfile.open(filename.c_str(), ios::app);
     if (!outfile.is_open())
     {
-      throw std::runtime_error("Failed to open file: " + filename);
+      throw runtime_error("Failed to open file: " + filename);
     }
 
-    outfile << itemToAdd.item_id << "," << itemToAdd.item_name << "," << itemToAdd.item_quantity << "," << itemToAdd.item_registration_date << std::endl;
+    outfile << itemToAdd.item_id << "," << toLowerCase(itemToAdd.item_name) << "," << toLowerCase(itemToAdd.item_quantity) << "," << itemToAdd.item_registration_date <<endl;
 
     if (outfile.fail())
     {
-      throw std::runtime_error("Failed to write to file: " + filename);
+      throw runtime_error("Failed to write to file: " + filename);
     }
 
     outfile.close();
-    std::cout << "Item " << itemToAdd.item_name << " has been added successfully!" << std::endl;
+    cout << "Item " << itemToAdd.item_name << " has been added successfully!" << endl;
   }
-  catch (const std::exception &e)
+  catch (const exception &e)
   {
-    std::cout << "Error: " << e.what() << std::endl;
+    cout << "Error: " << e.what() << endl;
   }
 }
 
 // sort compare item names during sorting
-bool compareItems(const Item &item1, const Item &item2)
+bool compareName(const Item &item1, const Item &item2)
 {
-  return item1.item_id < item2.item_id;
+  return item1.item_name < item2.item_name;
 }
 
 // Display sorted items
-void listItems(const std::string &filename)
+void listItems(const string &filename)
 {
-  std::ifstream file(filename.c_str());
+  ifstream file(filename.c_str());
   if (!file)
   {
-    std::cerr << "Error opening file: " << filename << std::endl;
+    cerr << "Error opening file: " << filename << endl;
     return;
   }
 
   vector<Item> items;
 
-  std::string line;
+  string line;
   while (getline(file, line))
   {
-    std::istringstream iss(line);
+    istringstream iss(line);
     Item itemRead;
 
-    std::string idStr;
-    std::string quantityStr;
-
-    getline(iss, idStr, ',');
+    getline(iss, itemRead.item_id, ',');
     getline(iss, itemRead.item_name, ',');
-    getline(iss, quantityStr, ',');
+    getline(iss, itemRead.item_quantity, ',');
     getline(iss, itemRead.item_registration_date, ',');
-    itemRead.item_id = stoi(idStr);
-    itemRead.item_quantity = stoi(quantityStr);
 
-    if(itemRead.isEmpty()){
-      items.push_back(itemRead);
-    }
-    else
-    {
-      cerr << "Error parsing line: " << line << std::endl;
-    }
+    items.push_back(itemRead);
   }
 
-  sort(items.begin(), items.end(), compareItems);
+  sort(items.begin(), items.end(), compareName);
 
   for (size_t i = 0; i < items.size(); i++)
   {
     const Item &item = items[i];
-    std::cout << "Item ID: " << item.item_id << "  ";
-    std::cout << "Item Name: " << item.item_name << "  ";
-    std::cout << "Item Quantity: " << item.item_quantity << "  ";
-    std::cout << "Item Registration Date: " << item.item_registration_date << "  " << std::endl;
-    std::cout << std::endl;
+    cout << "Item ID: " << item.item_id << "  ";
+    cout << "Item Name: " << item.item_name << "  ";
+    cout << "Quantity: " << item.item_quantity << "  ";
+    cout << "Item Registration Date: " << item.item_registration_date << "  " << endl;
+    cout << endl;
   }
 }
 
@@ -234,10 +208,6 @@ int main()
 
   // display welcome screen
   welcome_screen();
-  cout << endl;
-  cout << "                *******************************************" << endl;
-  cout << "                *      Enter a command of your choice     *" << endl;
-  cout << "                *******************************************" << endl;
 
   // command line
   while (true)
@@ -269,13 +239,13 @@ int main()
     {
       help();
     }
-    else if (commandName == "exit")
+    else if (toLowerCase(commandName) == "exit")
     {
       break;
     }
     else
     {
-      std::cout << "Invalid command" << std::endl;
+      cout << "Invalid command" << endl;
     }
   }
   return 0;
